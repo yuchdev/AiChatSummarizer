@@ -148,12 +148,13 @@ class ConversationUI {
     // Add event listeners after rendering
     setTimeout(() => {
       const nodeElement = document.querySelector(`[data-node-id="${node.id}"] .tree-node-header`);
-      nodeElement?.addEventListener('click', (e) => {
+      nodeElement?.addEventListener('click', (e: Event) => {
         const target = e.target as HTMLElement;
+        const mouseEvent = e as MouseEvent;
         if (target.classList.contains('tree-node-toggle')) {
           this.toggleNode(node.id);
         } else {
-          this.toggleSelection(node.id, e.ctrlKey || e.metaKey);
+          this.toggleSelection(node.id, mouseEvent.ctrlKey || mouseEvent.metaKey);
         }
       });
     }, 0);

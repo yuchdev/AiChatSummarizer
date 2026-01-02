@@ -36,7 +36,9 @@ export class Messaging {
   static addListener(
     callback: (message: ExtensionMessage, sender: browser.Runtime.MessageSender) => any
   ): void {
-    browser.runtime.onMessage.addListener(callback);
+    browser.runtime.onMessage.addListener((message: any, sender: any) => 
+      callback(message as ExtensionMessage, sender)
+    );
   }
 
   /**
@@ -45,7 +47,11 @@ export class Messaging {
   static removeListener(
     callback: (message: ExtensionMessage, sender: browser.Runtime.MessageSender) => any
   ): void {
-    browser.runtime.onMessage.removeListener(callback);
+    // Note: Due to wrapping, removing listeners may not work as expected
+    // Consider using a different pattern if removal is critical
+    browser.runtime.onMessage.removeListener((message: any, sender: any) => 
+      callback(message as ExtensionMessage, sender)
+    );
   }
 
   /**

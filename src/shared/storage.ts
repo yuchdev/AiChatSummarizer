@@ -28,7 +28,7 @@ export class Storage {
    */
   static async getConversations(): Promise<Record<string, ConversationTree>> {
     const result = await browser.storage.local.get(StorageKeys.CONVERSATIONS);
-    return result[StorageKeys.CONVERSATIONS] || {};
+    return (result[StorageKeys.CONVERSATIONS] as Record<string, ConversationTree>) || {};
   }
 
   /**

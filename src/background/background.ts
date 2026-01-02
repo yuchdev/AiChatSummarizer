@@ -13,7 +13,9 @@ class BackgroundService {
 
   private initialize(): void {
     // Listen for messages from content scripts and UI
-    browser.runtime.onMessage.addListener(this.handleMessage.bind(this));
+    browser.runtime.onMessage.addListener((message: any, sender: any) => 
+      this.handleMessage(message as ExtensionMessage, sender)
+    );
 
     // Listen for extension icon clicks
     browser.action.onClicked.addListener(this.handleIconClick.bind(this));
