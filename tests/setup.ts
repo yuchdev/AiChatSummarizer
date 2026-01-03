@@ -3,6 +3,8 @@
  * Runs before all tests
  */
 
+import { vi } from 'vitest';
+
 // Mock browser APIs for tests
 global.browser = {
   runtime: {

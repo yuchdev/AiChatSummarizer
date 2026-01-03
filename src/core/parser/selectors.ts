@@ -16,6 +16,11 @@ export interface SelectorConfig {
 }
 
 /**
+ * Minimum container height threshold for heuristic validation
+ */
+const MIN_CONTAINER_HEIGHT = 200;
+
+/**
  * Conversation container selectors
  * Prioritized from most specific to most general
  */
@@ -36,7 +41,7 @@ export const CONVERSATION_CONTAINER: SelectorConfig = {
     // Must be a substantial container
     // In tests, clientHeight may not be available, so check children instead
     const height = el.clientHeight || 0;
-    return el.children.length > 0 && (height > 200 || height === 0);
+    return el.children.length > 0 && (height > MIN_CONTAINER_HEIGHT || height === 0);
   },
 };
 

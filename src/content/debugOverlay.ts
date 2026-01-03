@@ -350,7 +350,8 @@ async function copyJSON(document: ChatDocument): Promise<void> {
   const json = JSON.stringify(document, null, 2);
   try {
     await navigator.clipboard.writeText(json);
-    alert('JSON copied to clipboard!');
+    // TODO: Replace alert with toast notification in future
+    console.log('[Debug Overlay] JSON copied to clipboard');
   } catch (error) {
     console.error('Failed to copy:', error);
     // Fallback: create temporary textarea
@@ -362,7 +363,7 @@ async function copyJSON(document: ChatDocument): Promise<void> {
     textarea.select();
     window.document.execCommand('copy');
     window.document.body.removeChild(textarea);
-    alert('JSON copied to clipboard!');
+    console.log('[Debug Overlay] JSON copied to clipboard (fallback)');
   }
 }
 
@@ -431,7 +432,8 @@ function parseAndUpdate(): void {
     updateOverlay();
   } catch (error) {
     console.error('Parse error:', error);
-    alert(`Parse error: ${error}`);
+    // TODO: Replace alert with toast notification in future
+    console.error('[Debug Overlay] Parse failed:', error);
   }
 }
 

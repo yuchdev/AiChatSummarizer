@@ -8,6 +8,13 @@ import type { MessagePart } from '../model/chat';
 /**
  * Simple string hash function (djb2 algorithm)
  * Returns a deterministic hash for the same input
+ * 
+ * djb2 is a simple, fast, and well-distributed hash function:
+ * - Initial value 5381 is chosen empirically
+ * - Multiplier 33 provides good distribution
+ * - XOR with char code adds the character contribution
+ * 
+ * Suitable for non-cryptographic use cases like stable ID generation.
  */
 function hashString(str: string): string {
   let hash = 5381;
