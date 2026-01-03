@@ -118,7 +118,7 @@ export function parseChatGpt(
 ): ParserResult {
   const warnings: string[] = [];
   const isDocument = doc instanceof Document;
-  const document = isDocument ? doc : doc.ownerDocument;
+  const document = isDocument ? doc : (doc.ownerDocument || doc as any as Document);
 
   if (!document) {
     throw new Error('Cannot parse: no document available');

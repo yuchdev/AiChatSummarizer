@@ -86,7 +86,7 @@ const UI_NOISE_PATTERNS = [
   /\bthumb(s)?\s*(up|down)\b/gi,
   /\bshare\b/gi,
   /\bcontinue\b/gi,
-  /^\s*[\d]+\s*\/\s*[\d]+\s*$/gi, // Message counters like "1 / 20"
+  /\b[\d]+\s*\/\s*[\d]+\b/gi, // Message counters like "1 / 20"
 ];
 
 /**

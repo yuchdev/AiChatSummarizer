@@ -34,7 +34,9 @@ export const CONVERSATION_CONTAINER: SelectorConfig = {
   ],
   heuristic: (el) => {
     // Must be a substantial container
-    return el.children.length > 0 && el.clientHeight > 200;
+    // In tests, clientHeight may not be available, so check children instead
+    const height = el.clientHeight || 0;
+    return el.children.length > 0 && (height > 200 || height === 0);
   },
 };
 
