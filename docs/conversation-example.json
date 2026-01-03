@@ -1,0 +1,55 @@
+{
+  "id": "conv_example_123",
+  "title": "Example ChatGPT Conversation",
+  "timestamp": 1704211200000,
+  "root": {
+    "id": "root",
+    "role": "system",
+    "content": "Conversation Root",
+    "children": [
+      {
+        "id": "msg_1",
+        "role": "user",
+        "content": "What is TypeScript?",
+        "timestamp": 1704211200000,
+        "children": [
+          {
+            "id": "msg_2",
+            "role": "assistant",
+            "content": "TypeScript is a strongly typed programming language that builds on JavaScript, giving you better tooling at any scale. It adds optional static typing to JavaScript, which helps catch errors during development.",
+            "timestamp": 1704211205000,
+            "metadata": {
+              "model": "gpt-4",
+              "tokens": 45
+            },
+            "children": [
+              {
+                "id": "msg_3",
+                "role": "user",
+                "content": "Can you give me an example?",
+                "timestamp": 1704211210000,
+                "children": [
+                  {
+                    "id": "msg_4",
+                    "role": "assistant",
+                    "content": "Sure! Here's a simple TypeScript example:\n\ninterface User {\n  name: string;\n  age: number;\n}\n\nfunction greet(user: User): string {\n  return `Hello, ${user.name}! You are ${user.age} years old.`;\n}\n\nconst myUser: User = {\n  name: 'Alice',\n  age: 30\n};\n\nconsole.log(greet(myUser));",
+                    "timestamp": 1704211220000,
+                    "metadata": {
+                      "model": "gpt-4",
+                      "tokens": 120
+                    },
+                    "children": []
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "metadata": {
+    "url": "https://chat.openai.com/c/example_123",
+    "platform": "ChatGPT"
+  }
+}

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Chat Summarizer - Conversation Viewer</title>
+  <link rel="stylesheet" href="ui.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>AI Chat Summarizer</h1>
+      <div class="header-actions">
+        <button id="refreshBtn" class="btn btn-secondary">Refresh</button>
+      </div>
+    </header>
+
+    <div class="main-content">
+      <aside class="sidebar">
+        <div class="search-box">
+          <input type="text" id="searchInput" placeholder="Search messages..." />
+        </div>
+        <div class="conversation-list" id="conversationList">
+          <!-- Conversations will be populated here -->
+        </div>
+      </aside>
+
+      <main class="content">
+        <div class="toolbar">
+          <div class="selection-info" id="selectionInfo">No messages selected</div>
+          <div class="actions">
+            <button id="summarizeBtn" class="btn btn-primary" disabled>Summarize</button>
+            <div class="dropdown">
+              <button id="exportBtn" class="btn btn-secondary" disabled>Export</button>
+              <div class="dropdown-content" id="exportMenu">
+                <a href="#" data-format="json">Export as JSON</a>
+                <a href="#" data-format="markdown">Export as Markdown</a>
+                <a href="#" data-format="text">Export as Text</a>
+                <a href="#" data-format="sqlite">Export to SQLite</a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tree-view" id="treeView">
+          <div class="empty-state">
+            <h2>No conversation loaded</h2>
+            <p>Select a conversation from the sidebar or parse a ChatGPT page.</p>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script type="module" src="ui.js"></script>
+</body>
+</html>
