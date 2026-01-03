@@ -140,3 +140,14 @@ vite.config.ts.timestamp-*
 
 # Icon generation script
 src/icons/create_icons.sh
+
+# Test artifacts
+playwright-report/
+test-results/
+.playwright/
+
+# Browser profiles for testing
+.pw-profile/
+
+# Coverage reports
+coverage/

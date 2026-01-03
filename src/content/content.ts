@@ -1,155 +1,111 @@
 import browser from 'webextension-polyfill';
-import { ConversationTree, MessageNode, MessageType } from '../shared/types';
+import { MessageType } from '../shared/types';
 import { Messaging } from '../shared/messaging';
+import { ParserMessageType, isParserMessage } from '../core/messaging/schema';
+import { extractConversation, waitForPageReady } from './extract';
+import { toggleOverlay, showOverlay, hideOverlay } from './debugOverlay';
+import { isChatGptPage } from '../core/parser/parseChatGpt';
 
 /**
  * Content script for parsing ChatGPT conversations
+ * Now uses the new parser infrastructure
  */
-class ChatGPTParser {
-  private conversationId: string = '';
+class ChatGPTContentScript {
+  private debugEnabled = false;
 
   constructor() {
     this.initialize();
   }
 
-  private initialize(): void {
+  private async initialize(): Promise<void> {
     console.log('AI Chat Summarizer content script initialized');
+
+    // Check if we're on a supported page
+    if (!isChatGptPage()) {
+      console.log('Not a ChatGPT page, content script inactive');
+      return;
+    }
+
+    // Load debug state from storage
+    await this.loadDebugState();
 
     // Listen for messages from background or UI
     browser.runtime.onMessage.addListener(this.handleMessage.bind(this));
 
-    // Parse on load
-    this.detectAndParse();
+    // Wait for page to be ready, then parse
+    await waitForPageReady();
+    
+    // Auto-parse after a delay to let page fully render
+    setTimeout(() => {
+      this.performExtraction();
+    }, 1500);
+
+    // Show debug overlay if enabled
+    if (this.debugEnabled) {
+      showOverlay();
+    }
+
+    // Add keyboard shortcut for debug overlay (Ctrl+Shift+D)
+    document.addEventListener('keydown', (e) => {
+      if (e.ctrlKey && e.shiftKey && e.key === 'D') {
+        e.preventDefault();
+        toggleOverlay();
+      }
+    });
+  }
+
+  private async loadDebugState(): Promise<void> {
+    try {
+      const result = await browser.storage.local.get('debug.parseOverlay');
+      this.debugEnabled = result['debug.parseOverlay'] === true;
+    } catch (error) {
+      console.error('Failed to load debug state:', error);
+    }
   }
 
   private async handleMessage(message: any): Promise<any> {
+    // Handle legacy message types for backward compatibility
     if (message.type === MessageType.PARSE_PAGE) {
-      return this.parseConversation();
+      await this.performExtraction();
+      return { success: true };
     }
+
+    // Handle new parser message types
+    if (isParserMessage(message)) {
+      switch (message.type) {
+        case ParserMessageType.CHAT_EXTRACT_REQUEST:
+          await this.performExtraction(message.payload?.debug);
+          return { success: true };
+
+        case ParserMessageType.DEBUG_TOGGLE:
+          this.debugEnabled = message.payload.enabled;
+          await browser.storage.local.set({ 'debug.parseOverlay': this.debugEnabled });
+          if (this.debugEnabled) {
+            showOverlay();
+          } else {
+            hideOverlay();
+          }
+          return { success: true };
+
+        case ParserMessageType.DEBUG_GET_STATE:
+          return { enabled: this.debugEnabled };
+      }
+    }
+
     return null;
   }
 
-  private detectAndParse(): void {
-    // Wait for page to be fully loaded
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', () => this.parseConversation());
-    } else {
-      // Already loaded
-      setTimeout(() => this.parseConversation(), 1000);
-    }
-  }
-
-  private parseConversation(): ConversationTree | null {
+  private async performExtraction(debug?: boolean): Promise<void> {
     try {
-      const conversation = this.extractConversationFromDOM();
-      if (conversation) {
-        // Send to background for storage
-        Messaging.sendToBackground({
-          type: MessageType.PARSE_COMPLETE,
-          payload: conversation,
-        });
-        return conversation;
-      }
+      const options = {
+        debug: debug ?? this.debugEnabled,
+      };
+      await extractConversation(options);
     } catch (error) {
-      console.error('Error parsing conversation:', error);
+      console.error('Extraction failed:', error);
     }
-    return null;
-  }
-
-  private extractConversationFromDOM(): ConversationTree | null {
-    // This is a basic parser that looks for common ChatGPT DOM structures
-    // The actual implementation may need to be adjusted based on ChatGPT's current HTML structure
-
-    const conversationContainer = document.querySelector('[class*="conversation"]') ||
-                                   document.querySelector('main') ||
-                                   document.querySelector('[role="main"]');
-
-    if (!conversationContainer) {
-      console.warn('Could not find conversation container');
-      return null;
-    }
-
-    // Extract conversation ID from URL
-    const urlMatch = window.location.href.match(/\/c\/([a-zA-Z0-9-]+)/);
-    this.conversationId = urlMatch ? urlMatch[1] : `conv_${Date.now()}`;
-
-    // Look for message elements - these selectors are approximate
-    const messageElements = conversationContainer.querySelectorAll(
-      '[data-message-id], [data-testid*="message"], .message, [class*="message"]'
-    );
-
-    if (messageElements.length === 0) {
-      console.warn('No messages found in conversation');
-      return null;
-    }
-
-    const messages: MessageNode[] = [];
-    let messageIndex = 0;
-
-    messageElements.forEach((element) => {
-      const messageNode = this.parseMessageElement(element as HTMLElement, messageIndex++);
-      if (messageNode) {
-        messages.push(messageNode);
-      }
-    });
-
-    // Get conversation title
-    const titleElement = document.querySelector('h1, [class*="title"], title');
-    const title = titleElement?.textContent?.trim() || 'Untitled Conversation';
-
-    // Build conversation tree
-    const rootMessage: MessageNode = {
-      id: 'root',
-      role: 'system',
-      content: 'Conversation Root',
-      children: messages,
-    };
-
-    const conversation: ConversationTree = {
-      id: this.conversationId,
-      title,
-      timestamp: Date.now(),
-      root: rootMessage,
-      metadata: {
-        url: window.location.href,
-        platform: 'ChatGPT',
-      },
-    };
-
-    console.log('Parsed conversation:', conversation);
-    return conversation;
-  }
-
-  private parseMessageElement(element: HTMLElement, index: number): MessageNode | null {
-    const textContent = element.textContent?.trim();
-    if (!textContent) return null;
-
-    // Determine role based on element attributes or class names
-    let role: 'user' | 'assistant' | 'system' = 'assistant';
-    
-    const classNames = element.className.toLowerCase();
-    const dataRole = element.getAttribute('data-role');
-    
-    if (dataRole === 'user' || classNames.includes('user')) {
-      role = 'user';
-    } else if (dataRole === 'assistant' || classNames.includes('assistant') || classNames.includes('bot')) {
-      role = 'assistant';
-    }
-
-    // Extract message ID
-    const messageId = element.getAttribute('data-message-id') || 
-                     element.getAttribute('id') || 
-                     `msg_${index}`;
-
-    return {
-      id: messageId,
-      role,
-      content: textContent,
-      timestamp: Date.now(),
-      children: [],
-    };
   }
 }
 
-// Initialize the parser
-new ChatGPTParser();
+// Initialize the content script
+new ChatGPTContentScript();
